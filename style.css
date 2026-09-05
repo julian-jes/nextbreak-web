@@ -1,0 +1,170 @@
+:root {
+    --background-primary: #121212;
+    --background-secondary: #212121;
+
+    --content-primary: #d89216;
+    --content-secondary: #f0c184;
+    --content-tertiary: #404040;
+    --content-tertiary-container: #505050;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--background-primary);
+    font-family: 'Roboto', sans-serif;
+}
+
+#title {
+    color: var(--content-secondary);
+    font-size: clamp(2.2rem, 9vw, 3.5rem);
+    font-weight: 800;
+    text-align: center;
+}
+
+#status-text {
+    color: var(--content-tertiary-container);
+    font-style: italic;
+    text-align: center;
+}
+
+#top-bar {
+    padding: 40px 20px 20px;
+}
+
+#app {
+    min-height: 100vh;
+    background-color: var(--background-primary);
+    display: flex;
+    flex-direction: column;
+}
+
+#summer-screen[hidden],
+#error-screen[hidden],
+#app[hidden] {
+    display: none;
+}
+
+.inner {
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+#content {
+    flex: 1;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+#bottom-bar {
+    background-color: var(--background-secondary);
+    padding: 20px;
+}
+
+#bottom-bar-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+#school-days-left {
+    color: var(--content-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+#progress-bar {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    border-radius: 10px;
+    background-color: var(--content-tertiary);
+    overflow: hidden;
+}
+
+#progress-bar-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 42%;
+    background-color: var(--content-primary);
+}
+
+#progress-bar-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--content-secondary);
+    font-weight: 700;
+}
+
+#pager {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+#holiday-countdown {
+    color: var(--content-primary);
+    font-size: clamp(3.5rem, 15vw, 6rem);
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.5;
+}
+
+#holiday-label {
+    color: var(--content-secondary);
+    font-size: clamp(1.3rem, 5vw, 2rem);
+    text-align: center;
+    line-height: 1.3;
+    white-space: pre-line;
+}
+
+#next-day-off {
+    color: var(--content-tertiary);
+    font-size: 1.1rem;
+    text-align: center;
+    padding-bottom: 20px;
+}
+
+#summer-screen,
+#error-screen  {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+#summer-screen h1,
+#error-screen h1 {
+    color: var(--content-primary);
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+}
+
+#summer-screen p,
+#error-screen p {
+    color: var(--content-secondary);
+    font-size: 1.3rem;
+    line-height: 1.4;
+}
