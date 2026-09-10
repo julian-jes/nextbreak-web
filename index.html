@@ -12,7 +12,11 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app">
+    <div id="loading-screen">
+        <div class="spinner"></div>
+    </div>
+
+    <div id="app-container" hidden>
         <header id="top-bar">
             <div class="inner">
                 <h1 id="title">Next Break</h1>
@@ -20,36 +24,58 @@
             </div>
         </header>
 
-        <main id="content">
-            <div id="pager">
-                <div class="pager-page">
-                    <p id="holiday-countdown">12</p>
-                    <p id="holiday-label">school days until<br>autumn break</p>
+        <div id="app">
+            <main id="content">
+                <div id="pager-wrapper">
+                    <button id="pager-prev" class="pager-arrow" aria-label="Previous">‹</button>
+
+                    <div id="pager">
+                        <div id="pager-track">
+                            <div class="pager-page">
+                                <p class="holiday-countdown">12</p>
+                                <p class="holiday-label">school days until<br>autumn break</p>
+                            </div>
+                            <div class="pager-page">
+                                <p class="holiday-countdown">35</p>
+                                <p class="holiday-label">school days until<br>winter break</p>
+                            </div>
+                            <div class="pager-page">
+                                <p class="holiday-countdown">57</p>
+                                <p class="holiday-label">school days until<br>carnival break</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="pager-next" class="pager-arrow" aria-label="Next">›</button>
                 </div>
-            </div>
 
-            <p id="next-day-off">Next day off in 3 days</p>
-        </main>
+                <div id="pager-pills">
 
-        <footer id="bottom-bar">
-            <div class="inner" id="bottom-bar-inner">
-                <p id="school-days-left">20 school days left</p>
-                <div id="progress-bar">
-                    <div id="progress-bar-fill"></div>
-                    <p id="progress-bar-label">42%</p>
                 </div>
-            </div>
-        </footer>
-    </div>
 
-    <div id="summer-screen" hidden>
-        <h1>It's summer!</h1>
-        <p>Relax, bro.</p>
-    </div>
-    
-    <div id="error-screen" hidden>
-        <h1>No data available</h1>
-        <p>Unable to load data. <br>Please try again.</p>
+                <p id="next-day-off">Next day off in 3 days</p>
+            </main>
+
+            <footer id="bottom-bar">
+                <div class="inner" id="bottom-bar-inner">
+                    <p id="school-days-left">20 school days left</p>
+                    <div id="progress-bar">
+                        <div id="progress-bar-fill"></div>
+                        <p id="progress-bar-label">42%</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+
+        <div id="summer-screen" hidden>
+            <h1>It's summer!</h1>
+            <p>Relax, bro.</p>
+        </div>
+        
+        <div id="error-screen" hidden>
+            <h1>No data available</h1>
+            <p>Unable to load data. <br>Please try again.</p>
+        </div>
     </div>
 
     <script src="script.js"></script>

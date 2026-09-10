@@ -1,13 +1,40 @@
+const state = {
+    currentPageIndex: 0,
+    pageCount: 0,
+    pagerTrack: null,
+    pagerControlsInitialized: false
+};
+
 async function loadData() {
-    const dataResponse = await fetch("https://julian-jes.github.io/nextbreak-data/data.json");
-    const calendarData = await dataResponse.json();
+    const fontsReady = document.fonts.ready;
 
-    const versionResponse = await fetch("https://julian-jes.github.io/nextbreak-data/version.json");
-    const version = await versionResponse.json();
+    try {
+        const fetchPromises = Promise.all([
+            fetch("https://julian-jes.github.io/nextbreak-data/data.json").then(res => res.json()),
+            fetch("https://julian-jes.github.io/nextbreak-data/version.json").then(res => res.json())
+        ]);
 
-    const viewModel = buildViewModel(calendarData, version);
-    console.log(viewModel);
-    render(viewModel);
+        const [[calendarData, version]] = await Promise.all([fetchPromises, fontsReady]);
+
+        const viewModel = buildViewModel(calendarData, version);
+        console.log(viewModel);
+        render(viewModel);
+    } catch (err) {
+        console.error(err);
+        render({ state : "error" });
+    }
+
+    revealApp();
+}
+
+function revealApp() {
+    document.getElementById("app-container").hidden = false;
+
+    const loadingScreen = document.getElementById("loading-screen");
+    loadingScreen.classList.add("hidden");
+    loadingScreen.addEventListener("transitioned", () => {
+        loadingScreen.remove();
+    }, { once: true });
 }
 
 function render(viewModel) {
@@ -16,14 +43,37 @@ function render(viewModel) {
     document.getElementById("error-screen").hidden = viewModel.state !== "error";
 
     if(viewModel.state !== "normal") {
+        document.getElementById("status-text").textContent = "";
         return;
     }
 
     document.getElementById("status-text").textContent = viewModel.statusText;
-    document.getElementById("holiday-countdown").textContent = viewModel.daysNumber;
-    document.getElementById("holiday-label").textContent = viewModel.daysText;
-    document.getElementById("next-day-off").textContent = viewModel.nextDayOff;
-    document.getElementById("school-days-left").textContent = viewModel.schoolDaysLefText;
+    document.getElementById("next-day-off").textContent = viewModel.nextDayOffText;
+    document.getElementById("school-days-left").textContent = viewModel.schoolDaysLeftText;
+
+    state.pagerTrack = document.getElementById("pager-track");
+    state.pagerTrack.innerHTML = "";
+
+    viewModel.pages.forEach(page => {
+        const pageDiv = document.createElement("div");
+        pageDiv.classList.add("pager-page");
+
+        const number = document.createElement("p");
+        number.classList.add("holiday-countdown");
+        number.textContent = page.number;
+
+        const label = document.createElement("p");
+        label.classList.add("holiday-label");
+        label.innerHTML = page.text;
+
+        pageDiv.appendChild(number);
+        pageDiv.appendChild(label);
+        state.pagerTrack.appendChild(pageDiv);
+   });
+   
+   state.pageCount = viewModel.pages.length;
+   state.currentPageIndex = 0;
+   setupPager();
 
     const percent = Math.floor(viewModel.progress * 100);
     document.getElementById("progress-bar-fill").style.width = `${percent}%`;
@@ -33,7 +83,6 @@ function render(viewModel) {
 function buildViewModel(calendarData, version) {
 
     if(isCalendarTooOld(version)) {
-        console.log("Test");
         return { state: "error"};
     }
 
@@ -54,40 +103,150 @@ function buildViewModel(calendarData, version) {
     const holiday = isHoliday(calendarData);
     const holidayIndex = nextHolidayIndex(calendarData);
 
-    let daysNumber;
-    let daysText;
+    const pages = [];
+
     if(holiday) {
-        daysNumber = "";
-        daysText = `Enjoy your ${holidayName(holidayIndex - 1)} break!`
-    } else {
-        const count = daysUntilHolidays(calendarData, holidayIndex);
+        pages.push({
+            number: "",
+            text: `Enjoy your ${holidayName(holidayIndex - 1)} break!`
+        });
+    }
+    for (let i = holidayIndex; i < 5; i++) {
+        const count = daysUntilHolidays(calendarData, i);
         const unit = count === 1 ? "day" : "days";
-        daysNumber = String(count);
-        daysText = `school ${unit} until\n${holidayName(holidayIndex)} break`
+        pages.push({
+            number: String(count),
+            text: `school ${unit} until\n${holidayName(i)} break`
+        });
     }
 
     const daysLeft = schoolDaysLeft(calendarData);
-    let schoolDaysLefText;
+    let schoolDaysLeftText;
     let statusText;
-    if(daysLeft == 1) {
-        schoolDaysLefText = "1 school day left";
+    if(daysLeft === 1) {
+        schoolDaysLeftText = "1 school day left";
         statusText = "War is over.";
     } else {
-        schoolDaysLefText = `${daysLeft} school days left`;
+        schoolDaysLeftText = `${daysLeft} school days left`;
         statusText = "";
     }
 
     return {
         state: "normal",
         statusText,
-        daysNumber,
-        daysText,
+        pages,
         nextDayOffText,
-        schoolDaysLefText,
+        schoolDaysLeftText,
         progress: schoolYearProgress(calendarData)
     };
 }
 
+//pager logic
+
+function setupPager() {
+    const pager = document.getElementById("pager");
+    const pillsContainer = document.getElementById("pager-pills");
+    const prevButton = document.getElementById("pager-prev");
+    const nextButton = document.getElementById("pager-next");
+
+    pillsContainer.innerHTML = "";
+    for (let i = 0; i < state.pageCount; i++) {
+        const pill = document.createElement("button");
+        pill.classList.add("pill");
+        pill.innerHTML = `<span class="pill-dot"></span>`
+        pill.setAttribute("aria-label", `Go to page ${i + 1}`);
+        pill.addEventListener("click", () => goToPage(i));
+        pillsContainer.appendChild(pill);
+    }
+
+    updatePagerUI(false);
+
+    if(state.pagerControlsInitialized) return;
+    state.pagerControlsInitialized = true;
+
+    prevButton.addEventListener("click", () => goToPage(state.currentPageIndex - 1));
+    nextButton.addEventListener("click", () => goToPage(state.currentPageIndex + 1));
+
+    setupDrag(pager);
+    setupKeyboard(pager);
+}
+
+function goToPage(index) {
+    state.currentPageIndex = Math.max(0, Math.min(state.pageCount - 1, index));
+    updatePagerUI(true);
+}
+
+function updatePagerUI(animate) {
+    if(!state.pagerTrack) return;
+
+    state.pagerTrack.style.transition = animate ? "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)" : "none";
+    state.pagerTrack.style.transform = `translateX(-${state.currentPageIndex * 100}%)`
+    
+    document.querySelectorAll(".pill").forEach((pill, i) => {
+        pill.classList.toggle("active", i === state.currentPageIndex);
+    });
+
+    document.getElementById("pager-prev").disabled = state.currentPageIndex === 0;
+    document.getElementById("pager-next").disabled = state.currentPageIndex === state.pageCount - 1;
+}
+
+function setupDrag(pager) {
+    let dragging = false;
+    let startX = 0;
+    let pagerWidth = 0;
+
+    pager.addEventListener("pointerdown", (e) => {
+        if(e.pointerType === "mouse") return;
+        if(state.pageCount <= 1) return;
+        dragging = true;
+        startX = e.clientX;
+        pagerWidth = pager.clientWidth;
+        state.pagerTrack.style.transition = "none";
+        pager.setPointerCapture(e.pointerId);
+    });
+
+    pager.addEventListener("pointermove", (e) => {
+        if(!dragging) return;
+        let deltaX = e.clientX - startX;
+
+        if((state.currentPageIndex === 0 && deltaX > 0) || (state.currentPageIndex === state.pageCount - 1 && deltaX < 0)) {
+            deltaX *= 0.35;
+        }
+
+        const translatePx = -state.currentPageIndex * pagerWidth + deltaX;
+        state.pagerTrack.style.transform = `translateX(${translatePx}px)`;
+    });
+
+    function endDrag(e) {
+        if(!dragging) return;
+        dragging = false;
+
+        const deltaX = e.clientX - startX;
+        const threshold = pagerWidth * 0.2;
+
+        if(deltaX < -threshold && state.currentPageIndex < state.pageCount - 1) {
+            state.currentPageIndex++;
+        } else if(deltaX > threshold && state.currentPageIndex > 0) {
+            state.currentPageIndex--;
+        }
+        updatePagerUI(true);
+    }
+
+    pager.addEventListener("pointercancel", endDrag);
+    pager.addEventListener("pointerup", endDrag);
+}
+
+function setupKeyboard(pager) {
+    document.addEventListener("keydown", (e) => {
+        if(e.key === "ArrowLeft") {
+            goToPage(state.currentPageIndex - 1);
+        } else if(e.key === "ArrowRight") {
+            goToPage(state.currentPageIndex + 1);
+        }
+    });
+}
+
+//calendar logic
 
 function isCalendarTooOld(version) {
     const now = new Date();
@@ -128,7 +287,6 @@ function getCurrentDate() {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
-    return "2026-09-07";
     return `${year}-${month}-${day}`
 }
 
