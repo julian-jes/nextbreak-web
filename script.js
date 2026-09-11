@@ -17,17 +17,16 @@ async function loadData() {
         const [[calendarData, version]] = await Promise.all([fetchPromises, fontsReady]);
 
         const viewModel = buildViewModel(calendarData, version);
-        console.log(viewModel);
         render(viewModel);
     } catch (err) {
         console.error(err);
         render({ state : "error" });
     }
 
-    revealApp();
+    hideLoadingScreen();
 }
 
-function revealApp() {
+function hideLoadingScreen() {
     document.getElementById("app-container").hidden = false;
 
     const loadingScreen = document.getElementById("loading-screen");
