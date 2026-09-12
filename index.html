@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#212121">
     <title>Next Break</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -29,31 +30,33 @@
 
         <div id="app">
             <main id="content">
-                <div id="pager-wrapper">
-                    <button id="pager-prev" class="pager-arrow" aria-label="Previous">‹</button>
+                <div id="pager-section">
+                    <div id="pager-wrapper">
+                        <button id="pager-prev" class="pager-arrow" aria-label="Previous">‹</button>
 
-                    <div id="pager">
-                        <div id="pager-track">
-                            <div class="pager-page">
-                                <p class="holiday-countdown">12</p>
-                                <p class="holiday-label">school days until<br>autumn break</p>
-                            </div>
-                            <div class="pager-page">
-                                <p class="holiday-countdown">35</p>
-                                <p class="holiday-label">school days until<br>winter break</p>
-                            </div>
-                            <div class="pager-page">
-                                <p class="holiday-countdown">57</p>
-                                <p class="holiday-label">school days until<br>carnival break</p>
+                        <div id="pager">
+                            <div id="pager-track">
+                                <div class="pager-page">
+                                    <p class="holiday-countdown">12</p>
+                                    <p class="holiday-label">school days until<br>autumn break</p>
+                                </div>
+                                <div class="pager-page">
+                                    <p class="holiday-countdown">35</p>
+                                    <p class="holiday-label">school days until<br>winter break</p>
+                                </div>
+                                <div class="pager-page">
+                                    <p class="holiday-countdown">57</p>
+                                    <p class="holiday-label">school days until<br>carnival break</p>
+                                </div>
                             </div>
                         </div>
+
+                        <button id="pager-next" class="pager-arrow" aria-label="Next">›</button>
                     </div>
 
-                    <button id="pager-next" class="pager-arrow" aria-label="Next">›</button>
-                </div>
+                    <div id="pager-pills">
 
-                <div id="pager-pills">
-
+                    </div>
                 </div>
 
                 <p id="next-day-off">Next day off in 3 days</p>

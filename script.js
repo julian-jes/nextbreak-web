@@ -207,22 +207,46 @@ function updatePagerUI(animate) {
 
 function setupDrag(pager) {
     let dragging = false;
+    let decided = false;
     let startX = 0;
+    let startY = 0;
     let pagerWidth = 0;
+    let pointerId = null;
 
     pager.addEventListener("pointerdown", (e) => {
-        if(e.pointerType === "mouse") return;
-        if(state.pageCount <= 1) return;
-        dragging = true;
+        if(e.pointerType === "mouse" || state.pageCount <= 1) return;
+
+        dragging = false;
+        decided = false;
         startX = e.clientX;
+        startY = e.clientY;
         pagerWidth = pager.clientWidth;
-        dom.pagerTrack.style.transition = "none";
-        pager.setPointerCapture(e.pointerId);
+        pointerId = e.pointerId;
     });
 
     pager.addEventListener("pointermove", (e) => {
+        if(pointerId === null || e.pointerId !== pointerId) return;
+
+        let deltaX  = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+
+        if(!decided) {
+            if(Math.abs(deltaX) < 8 && Math.abs(deltaY) < 8) return;
+
+            if(Math.abs(deltaX) > Math.abs(deltaY)) {
+                decided = true;
+                dragging = true;
+                dom.pagerTrack.style.transition = "none";
+                pager.setPointerCapture(e.pointerId);
+            } else {
+                decided = true;
+                dragging = false;
+                pointerId = null;
+                return;
+            }
+        }
+
         if(!dragging) return;
-        let deltaX = e.clientX - startX;
 
         if((state.currentPageIndex === 0 && deltaX > 0) || (state.currentPageIndex === state.pageCount - 1 && deltaX < 0)) {
             deltaX *= 0.35;
@@ -233,8 +257,12 @@ function setupDrag(pager) {
     });
 
     function endDrag(e) {
-        if(!dragging) return;
+        if(!dragging) {
+            pointerId = null;
+            return;
+        }
         dragging = false;
+        pointerId = null;
 
         const deltaX = e.clientX - startX;
         const threshold = pagerWidth * 0.2;
