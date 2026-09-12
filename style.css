@@ -183,20 +183,55 @@ body {
     justify-content: center;
     text-align: center;
     gap: 20px;
-    padding: 20px;
+    padding: 20px 20px 120px 20px;
 }
 
-#summer-screen h1,
+#summer-screen h1 {
+    color: var(--content-primary);
+    font-size: clamp(2.2rem, 14vmin, 4rem);
+}
+
+#summer-screen p {
+    color: var(--content-secondary);
+    font-size: clamp(1.2rem, 8.5vmin, 2.3rem);
+    line-height: 1.4;
+}
+
 #error-screen h1 {
     color: var(--content-primary);
     font-size: clamp(2.5rem, 10vmin, 3.5rem);
 }
 
-#summer-screen p,
 #error-screen p {
     color: var(--content-secondary);
-    font-size: 1.3rem;
+    font-size: clamp(1.2rem, 5.5vmin, 1.5rem);
     line-height: 1.4;
+}
+
+#error-icon svg {
+    width: 64px;
+    height: 64px;
+    color: var(--content-primary);
+}
+
+#error-retry {
+    margin-top: 4px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    border: none;
+    background-color: var(--content-primary);
+    color: var(--background-primary);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+#error-retry:hover {
+    opacity: 0.9;
+}
+
+#error-retry[hidden] {
+    display: none;
 }
 
 #pager {
@@ -261,6 +296,14 @@ body {
     user-select: none;
     flex-shrink: 0;
     transition: background-color 0.2s, color 0.2s;
+}
+
+#pager-next {
+    margin-right: 10px;
+}
+
+#pager-prev {
+    margin-left: 10px;
 }
 
 .pager-arrow:hover {

@@ -1,3 +1,9 @@
+const CONFIG = {
+    dataUrl: "https://julian-jes.github.io/nextbreak-data/data.json",
+    versionUrl: "https://julian-jes.github.io/nextbreak-data/version.json",
+    fetchTimeoutMs: 8000
+}
+
 const state = {
     currentPageIndex: 0,
     pageCount: 0,
@@ -20,29 +26,98 @@ const dom = {
     pillsContainer: document.getElementById("pager-pills"),
     prevButton: document.getElementById("pager-prev"),
     nextButton: document.getElementById("pager-next"),
+    errorIcon: document.getElementById("error-icon"),
+    errorTitle: document.getElementById("error-title"),
+    errorMessage: document.getElementById("error-message"),
+    errorRetry: document.getElementById("error-retry"),
 
     pills: []
 };
+
+const ERROR_CONTENT = {
+    network: {
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+        title: "Can't reach the server",
+        message: "Check your internet connection and try again.",
+        showRetry: true
+    },
+    "invalid-data": {
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+        title: "Something went wrong",
+        message: "The data couldn't be loaded. Please try again later.",
+        showRetry: true
+    },
+    outdated: {
+        icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+        title: "Coming soon",
+        message: "This year's data isn't available yet. Please check back soon.",
+        showRetry: false
+    }
+}
+
+async function fetchJson(url) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), CONFIG.fetchTimeoutMs);
+    let result;
+    try {
+        result = await fetch(url, { signal: controller.signal });
+    } catch (err) {
+        throw tagError("network", err);
+    } finally {
+        clearTimeout(timeoutId);
+    }
+
+    if(!result.ok) {
+        throw tagError("invalid-data", new Error(`${url} responded ${result.status}`));
+    }
+
+    try {
+        return await result.json();
+    } catch(err) {
+        throw tagError("invalid-data", err);
+    }
+}
+
+function tagError(reason, err) {
+    err.reason = reason;
+    return err;
+}
 
 async function loadData() {
     const fontsReady = document.fonts.ready;
 
     try {
         const fetchPromises = Promise.all([
-            fetch("https://julian-jes.github.io/nextbreak-data/data.json").then(res => res.json()),
-            fetch("https://julian-jes.github.io/nextbreak-data/version.json").then(res => res.json())
+            fetchJson(CONFIG.dataUrl),
+            fetchJson(CONFIG.versionUrl)
         ]);
 
         const [[calendarData, version]] = await Promise.all([fetchPromises, fontsReady]);
+        validateCalendarData(calendarData, version);
 
         const viewModel = buildViewModel(calendarData, version);
         render(viewModel);
     } catch (err) {
         console.error(err);
-        render({ state : "error" });
+        render({ state : "error", errorReason: err.reason || "invalid-data"});
     }
 
     hideLoadingScreen();
+}
+
+function validateCalendarData(calendarData, version) {
+    if (
+        typeof version?.year !== "number" ||
+        !Array.isArray(calendarData?.calendar) ||
+        calendarData.calendar.length === 0 ||
+        !calendarData.autumn_break_start ||
+        !calendarData.winter_break_start ||
+        !calendarData.carnival_break_start ||
+        !calendarData.easter_break_start ||
+        !calendarData.summer_start_time
+    ) {
+        throw tagError("invalid-data", new Error("Calendar data is missing required fields"));
+    }
 }
 
 function hideLoadingScreen() {
@@ -58,6 +133,10 @@ function render(viewModel) {
     dom.app.hidden = viewModel.state !== "normal";
     dom.summerScreen.hidden = viewModel.state !== "summer";
     dom.errorScreen.hidden = viewModel.state !== "error";
+
+    if(viewModel.state === "error") {
+        renderError(viewModel.errorReason);
+    }
 
     if(viewModel.state !== "normal") {
         dom.statusText.textContent = "";
@@ -96,10 +175,19 @@ function render(viewModel) {
     dom.progressBarLabel.textContent = `${percent}%`;
 }
 
+function renderError(reason) {
+    const content = ERROR_CONTENT[reason] || ERROR_CONTENT["invalid-data"];
+    dom.errorIcon.innerHTML = content.icon;
+    dom.errorMessage.textContent = content.message;
+    dom.errorTitle.textContent = content.title;
+    dom.errorRetry.hidden = !content.showRetry;
+    dom.errorRetry.addEventListener("click", () => location.reload());
+}
+
 function buildViewModel(calendarData, version) {
 
     if(isCalendarTooOld(version)) {
-        return { state: "error"};
+        return { state: "error", errorReason: "outdated" };
     }
 
     if(isSummerHoliday(calendarData, version)) {
