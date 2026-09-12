@@ -1,8 +1,27 @@
 const state = {
     currentPageIndex: 0,
     pageCount: 0,
-    pagerTrack: null,
     pagerControlsInitialized: false
+};
+
+const dom = {
+    appContainer: document.getElementById("app-container"),
+    loadingScreen: document.getElementById("loading-screen"),
+    app: document.getElementById("app"),
+    summerScreen: document.getElementById("summer-screen"),
+    errorScreen: document.getElementById("error-screen"),
+    statusText: document.getElementById("status-text"),
+    nextDayOff: document.getElementById("next-day-off"),
+    schoolDaysLeft: document.getElementById("school-days-left"),
+    pagerTrack: document.getElementById("pager-track"),
+    progressBarFill: document.getElementById("progress-bar-fill"),
+    progressBarLabel: document.getElementById("progress-bar-label"),
+    pager: document.getElementById("pager"),
+    pillsContainer: document.getElementById("pager-pills"),
+    prevButton: document.getElementById("pager-prev"),
+    nextButton: document.getElementById("pager-next"),
+
+    pills: []
 };
 
 async function loadData() {
@@ -27,31 +46,29 @@ async function loadData() {
 }
 
 function hideLoadingScreen() {
-    document.getElementById("app-container").hidden = false;
+    dom.appContainer.hidden = false;
 
-    const loadingScreen = document.getElementById("loading-screen");
-    loadingScreen.classList.add("hidden");
-    loadingScreen.addEventListener("transitioned", () => {
-        loadingScreen.remove();
+    dom.loadingScreen.classList.add("hidden");
+    dom.loadingScreen.addEventListener("transitionend", () => {
+        dom.loadingScreen.remove();
     }, { once: true });
 }
 
 function render(viewModel) {
-    document.getElementById("app").hidden = viewModel.state !== "normal";
-    document.getElementById("summer-screen").hidden = viewModel.state !== "summer";
-    document.getElementById("error-screen").hidden = viewModel.state !== "error";
+    dom.app.hidden = viewModel.state !== "normal";
+    dom.summerScreen.hidden = viewModel.state !== "summer";
+    dom.errorScreen.hidden = viewModel.state !== "error";
 
     if(viewModel.state !== "normal") {
-        document.getElementById("status-text").textContent = "";
+        dom.statusText.textContent = "";
         return;
     }
 
-    document.getElementById("status-text").textContent = viewModel.statusText;
-    document.getElementById("next-day-off").textContent = viewModel.nextDayOffText;
-    document.getElementById("school-days-left").textContent = viewModel.schoolDaysLeftText;
+    dom.statusText.textContent = viewModel.statusText;
+    dom.nextDayOff.textContent = viewModel.nextDayOffText;
+    dom.schoolDaysLeft.textContent = viewModel.schoolDaysLeftText;
 
-    state.pagerTrack = document.getElementById("pager-track");
-    state.pagerTrack.innerHTML = "";
+    dom.pagerTrack.innerHTML = "";
 
     viewModel.pages.forEach(page => {
         const pageDiv = document.createElement("div");
@@ -67,7 +84,7 @@ function render(viewModel) {
 
         pageDiv.appendChild(number);
         pageDiv.appendChild(label);
-        state.pagerTrack.appendChild(pageDiv);
+        dom.pagerTrack.appendChild(pageDiv);
    });
    
    state.pageCount = viewModel.pages.length;
@@ -75,8 +92,8 @@ function render(viewModel) {
    setupPager();
 
     const percent = Math.floor(viewModel.progress * 100);
-    document.getElementById("progress-bar-fill").style.width = `${percent}%`;
-    document.getElementById("progress-bar-label").textContent = `${percent}%`;
+    dom.progressBarFill.style.width = `${percent}%`;
+    dom.progressBarLabel.textContent = `${percent}%`;
 }
 
 function buildViewModel(calendarData, version) {
@@ -143,19 +160,18 @@ function buildViewModel(calendarData, version) {
 //pager logic
 
 function setupPager() {
-    const pager = document.getElementById("pager");
-    const pillsContainer = document.getElementById("pager-pills");
-    const prevButton = document.getElementById("pager-prev");
-    const nextButton = document.getElementById("pager-next");
 
-    pillsContainer.innerHTML = "";
+    dom.pillsContainer.innerHTML = "";
+    dom.pills = [];
     for (let i = 0; i < state.pageCount; i++) {
         const pill = document.createElement("button");
         pill.classList.add("pill");
         pill.innerHTML = `<span class="pill-dot"></span>`
         pill.setAttribute("aria-label", `Go to page ${i + 1}`);
         pill.addEventListener("click", () => goToPage(i));
-        pillsContainer.appendChild(pill);
+
+        dom.pillsContainer.appendChild(pill);
+        dom.pills.push(pill);
     }
 
     updatePagerUI(false);
@@ -163,11 +179,11 @@ function setupPager() {
     if(state.pagerControlsInitialized) return;
     state.pagerControlsInitialized = true;
 
-    prevButton.addEventListener("click", () => goToPage(state.currentPageIndex - 1));
-    nextButton.addEventListener("click", () => goToPage(state.currentPageIndex + 1));
+    dom.prevButton.addEventListener("click", () => goToPage(state.currentPageIndex - 1));
+    dom.nextButton.addEventListener("click", () => goToPage(state.currentPageIndex + 1));
 
-    setupDrag(pager);
-    setupKeyboard(pager);
+    setupDrag(dom.pager);
+    setupKeyboard(dom.pager);
 }
 
 function goToPage(index) {
@@ -176,17 +192,17 @@ function goToPage(index) {
 }
 
 function updatePagerUI(animate) {
-    if(!state.pagerTrack) return;
+    if(!dom.pagerTrack) return;
 
-    state.pagerTrack.style.transition = animate ? "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)" : "none";
-    state.pagerTrack.style.transform = `translateX(-${state.currentPageIndex * 100}%)`
-    
-    document.querySelectorAll(".pill").forEach((pill, i) => {
+    dom.pagerTrack.style.transition = animate ? "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)" : "none";
+    dom.pagerTrack.style.transform = `translateX(-${state.currentPageIndex * 100}%)`
+
+    dom.pills.forEach((pill, i) => {
         pill.classList.toggle("active", i === state.currentPageIndex);
     });
 
-    document.getElementById("pager-prev").disabled = state.currentPageIndex === 0;
-    document.getElementById("pager-next").disabled = state.currentPageIndex === state.pageCount - 1;
+    dom.prevButton.disabled = state.currentPageIndex === 0;
+    dom.nextButton.disabled = state.currentPageIndex === state.pageCount - 1;
 }
 
 function setupDrag(pager) {
@@ -200,7 +216,7 @@ function setupDrag(pager) {
         dragging = true;
         startX = e.clientX;
         pagerWidth = pager.clientWidth;
-        state.pagerTrack.style.transition = "none";
+        dom.pagerTrack.style.transition = "none";
         pager.setPointerCapture(e.pointerId);
     });
 
@@ -213,7 +229,7 @@ function setupDrag(pager) {
         }
 
         const translatePx = -state.currentPageIndex * pagerWidth + deltaX;
-        state.pagerTrack.style.transform = `translateX(${translatePx}px)`;
+        dom.pagerTrack.style.transform = `translateX(${translatePx}px)`;
     });
 
     function endDrag(e) {
