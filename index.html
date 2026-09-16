@@ -23,7 +23,17 @@
     <div id="app-container" hidden>
         <header id="top-bar">
             <div class="inner">
-                <h1 id="title">Next Break</h1>
+                <button id="about-button" class="icon-button" aria-label="About this app">
+                    <svg viewBox="0 0 24 24">
+                        <mask id="info-mask">
+                            <circle cx="12" cy="12" r="10" fill="white"/>
+                            <circle cx="12" cy="8" r="1.3" fill="black"/>
+                            <rect x="10.8" y="10.5" width="2.4" height="7" rx="1.2" fill="black"/>
+                        </mask>
+                        <circle cx="12" cy="12" r="10" fill="currentColor" mask="url(#info-mask)"/>
+                    </svg>
+                </button>
+                <h1 id="title" translate="no">Next Break</h1>
                 <p id="status-text">Test</p>
             </div>
         </header>
@@ -80,9 +90,52 @@
         
         <div id="error-screen" hidden>
             <div id="error-icon" aria-hidden="true"></div>
-            <h1 id="error-title">Update needed</h1>
-            <p id="error-message">This year's calendar isn't available yet. Please check back soon.</p>
+            <h1 id="error-title"></h1>
+            <p id="error-message"></p>
             <button id="error-retry" hidden>Try again</button>
+        </div>
+        <div id="about-overlay" class="overlay" hidden>
+            <div id="about-dialog" role="dialog" aria-modal="true" aria-labelledby="about-title">
+                <button id="about-close" class="icon-button" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+
+                <h2 id="about-title">About this page</h2>
+                <p id="about-developer">Created by Julian Jesacher</p>
+                <p id="about-version"></p>
+
+                <div id="about-buttons">
+                    <a id="about-app-download" class="link-button" href="#" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        <span>Download the app</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </a>
+
+                    <a id="about-source-code" class="link-button" href="#" target="_blank" rel="noopener">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="16 18 22 12 16 6"/>
+                            <polyline points="8 6 2 12 8 18"/>
+                        </svg>
+                        <span>View source code</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 

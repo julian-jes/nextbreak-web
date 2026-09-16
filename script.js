@@ -1,13 +1,16 @@
 const CONFIG = {
     dataUrl: "https://julian-jes.github.io/nextbreak-data/data.json",
     versionUrl: "https://julian-jes.github.io/nextbreak-data/version.json",
-    fetchTimeoutMs: 8000
+    fetchTimeoutMs: 8000,
+    sourceCodeUrl: "https://github.com/julian-jes/nextbreak-web",
+    appDownloadUrl: "https://github.com/julian-jes/nextbreak",
 }
 
 const state = {
     currentPageIndex: 0,
     pageCount: 0,
-    pagerControlsInitialized: false
+    pagerControlsInitialized: false,
+    scrollY: 0
 };
 
 const dom = {
@@ -30,6 +33,12 @@ const dom = {
     errorTitle: document.getElementById("error-title"),
     errorMessage: document.getElementById("error-message"),
     errorRetry: document.getElementById("error-retry"),
+    aboutButton: document.getElementById("about-button"),
+    aboutOverlay: document.getElementById("about-overlay"),
+    aboutClose: document.getElementById("about-close"),
+    aboutVersion: document.getElementById("about-version"),
+    aboutSourceCode: document.getElementById("about-source-code"),
+    aboutAppDownload: document.getElementById("about-app-download"),
 
     pills: []
 };
@@ -87,13 +96,16 @@ async function loadData() {
     const fontsReady = document.fonts.ready;
 
     try {
+        dom.aboutVersion.textContent = `Data version: unavailable`;
+
         const fetchPromises = Promise.all([
             fetchJson(CONFIG.dataUrl),
             fetchJson(CONFIG.versionUrl)
         ]);
-
         const [[calendarData, version]] = await Promise.all([fetchPromises, fontsReady]);
         validateCalendarData(calendarData, version);
+        
+        dom.aboutVersion.textContent = `Data version: ${version.year}.${version.hotfix}`;
 
         const viewModel = buildViewModel(calendarData, version);
         render(viewModel);
@@ -108,6 +120,7 @@ async function loadData() {
 function validateCalendarData(calendarData, version) {
     if (
         typeof version?.year !== "number" ||
+        typeof version?.hotfix !== "number" ||
         !Array.isArray(calendarData?.calendar) ||
         calendarData.calendar.length === 0 ||
         !calendarData.autumn_break_start ||
@@ -133,6 +146,7 @@ function render(viewModel) {
     dom.app.hidden = viewModel.state !== "normal";
     dom.summerScreen.hidden = viewModel.state !== "summer";
     dom.errorScreen.hidden = viewModel.state !== "error";
+    initAbout();
 
     if(viewModel.state === "error") {
         renderError(viewModel.errorReason);
@@ -243,6 +257,48 @@ function buildViewModel(calendarData, version) {
         schoolDaysLeftText,
         progress: schoolYearProgress(calendarData)
     };
+}
+
+//about logic
+
+function initAbout() {
+    dom.aboutSourceCode.href = CONFIG.sourceCodeUrl;
+    dom.aboutAppDownload.href = CONFIG.appDownloadUrl;
+
+    dom.aboutButton.addEventListener("click", openAbout);
+    dom.aboutClose.addEventListener("click", closeAbout);
+    dom.aboutOverlay.addEventListener("click", (e) => {
+        if(e.target === dom.aboutOverlay) closeAbout();
+    });
+    document.addEventListener("keydown", (e) => {
+        if(!dom.aboutOverlay.hidden && e.key === "Escape") closeAbout();
+    });
+}
+
+function openAbout() {
+    dom.aboutOverlay.hidden = false;
+
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    state.scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${state.scrollY}px`;
+    document.body.style.left = "0";
+    document.body.style.right = "0";
+    document.body.style.width = "100%";
+    document.body.style.paddingRight= `${scrollbarWidth}px`;
+}
+
+function closeAbout() {
+    dom.aboutOverlay.hidden = true;
+
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+    document.body.style.paddingRight = "";
+    window.scrollTo(0, state.scrollY);
 }
 
 //pager logic
