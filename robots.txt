@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://nextbreak.julianjesacher.org/sitemap.xml
