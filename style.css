@@ -408,6 +408,7 @@ body {
     border: none;
     padding: 0;
     cursor: pointer;
+    transition: transform 0.1s ease;
 }
 
 .pill-dot {
@@ -415,7 +416,21 @@ body {
     height: 8px;
     border-radius: 999px;
     background-color: var(--content-tertiary);
-    transition: width 0.2s, background-color 0.2s;
+    transition: width 0.2s ease, background-color 0.2s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+
+@media (hover: hover) {
+    .pill:hover:not(.active) .pill-dot {
+        background-color: var(--content-tertiary-container);
+    }
+
+    .pill.active:hover .pill-dot {
+        opacity: 0.9;
+    }
+}
+
+.pill:active {
+    transform: scale(0.9);
 }
 
 .pill.active .pill-dot {
@@ -551,6 +566,11 @@ body {
 button, 
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+button:focus,
+a:focus {
+    outline: none;
 }
 
 .link-button svg {
